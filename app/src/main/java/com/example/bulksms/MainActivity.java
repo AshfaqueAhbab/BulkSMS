@@ -8,8 +8,6 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -83,7 +81,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setSupportActionBar((MaterialToolbar) findViewById(R.id.toolbar));
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_import) {
+                handleImport();
+                return true;
+            }
+            return false;
+        });
 
         contacts = ContactStorage.load(this);
         adapter = new ContactAdapter(contacts, new ContactAdapter.Listener() {
@@ -137,23 +143,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             adapter.clearSelection();
         });
-    }
-
-    // ── Toolbar menu (Import) ────────────────────────────────────────────────────
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_import) {
-            handleImport();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     // ── Import from phone contacts ───────────────────────────────────────────────
