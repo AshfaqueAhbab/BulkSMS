@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">BulkSMS</string>
+    <string name="add_contact">Add contact</string>
+    <string name="compose_sms">Compose SMS</string>
+    <string name="search_hint">Search contacts…</string>
+    <string name="select_all">Select All</string>
+    <string name="import_contacts">Import Contacts</string>
+</resources>
