@@ -79,10 +79,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        androidx.activity.EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        // Do NOT call setSupportActionBar() here — it takes ownership of the toolbar's
+        // menu system and wipes the items already loaded via app:menu in XML.
+        // MainActivity needs no ActionBar APIs (no back button), so we drive the
+        // toolbar directly.
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_import) {
                 handleImport();
