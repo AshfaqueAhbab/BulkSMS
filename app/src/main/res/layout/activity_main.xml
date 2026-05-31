@@ -2,6 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -33,7 +34,8 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
-                android:hint="@string/search_hint">
+                android:hint="@string/search_hint"
+                app:endIconMode="clear_text">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/editSearch"
@@ -56,6 +58,17 @@
         </LinearLayout>
 
     </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Empty state — shown when contact list is empty -->
+    <TextView
+        android:id="@+id/emptyView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="@string/empty_contacts"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"

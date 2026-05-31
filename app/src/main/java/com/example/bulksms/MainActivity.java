@@ -8,7 +8,11 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -17,6 +21,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Contact> contacts;
     private ContactAdapter adapter;
     private Button btnCompose;
+    private TextView emptyView;
 
     // ── Activity result launchers (must be registered before onCreate) ──────────
 
@@ -82,6 +90,18 @@ public class MainActivity extends AppCompatActivity {
         androidx.activity.EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
+        // Push bottom buttons above the keyboard when it appears.
+        ViewCompat.setOnApplyWindowInsetsListener(
+                findViewById(R.id.coordinatorLayout), (v, insets) -> {
+                    Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                    Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+                    v.setPadding(bars.left, 0, bars.right,
+                            Math.max(bars.bottom, ime.bottom));
+                    return insets;
+                });
+
+        emptyView = findViewById(R.id.emptyView);
+
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         // Do NOT call setSupportActionBar() here — it takes ownership of the toolbar's
         // menu system and wipes the items already loaded via app:menu in XML.
@@ -113,6 +133,16 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         setupSwipeToDelete(recyclerView);
+
+        // Dismiss keyboard whenever the user touches the contact list.
+        recyclerView.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(@NonNull RecyclerView rv,
+                    @NonNull MotionEvent e) {
+                if (e.getAction() == MotionEvent.ACTION_DOWN) hideKeyboard();
+                return false;
+            }
+        });
 
         // Search
         TextInputEditText editSearch = findViewById(R.id.editSearch);
@@ -325,6 +355,17 @@ public class MainActivity extends AppCompatActivity {
             btnCompose.setText(R.string.compose_sms);
         } else {
             btnCompose.setText(getString(R.string.compose_sms) + " (" + count + ")");
+        }
+        emptyView.setVisibility(adapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+    }
+
+    private void hideKeyboard() {
+        View focus = getCurrentFocus();
+        if (focus != null) {
+            InputMethodManager imm =
+                    (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(focus.getWindowToken(), 0);
+            focus.clearFocus();
         }
     }
 }
