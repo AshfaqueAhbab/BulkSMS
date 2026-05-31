@@ -14,6 +14,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.textfield.TextInputEditText;
@@ -35,7 +38,18 @@ public class ComposeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        androidx.activity.EdgeToEdge.enable(this);
         setContentView(R.layout.activity_compose);
+
+        // Push content below status bar and above keyboard/nav bar.
+        ViewCompat.setOnApplyWindowInsetsListener(
+                findViewById(R.id.composeRoot), (v, insets) -> {
+                    Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                    Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+                    v.setPadding(bars.left, bars.top, bars.right,
+                            Math.max(bars.bottom, ime.bottom));
+                    return insets;
+                });
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

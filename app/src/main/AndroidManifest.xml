@@ -25,10 +25,14 @@
         </activity>
 
         <!-- Add / Edit contact screen -->
-        <activity android:name=".AddEditContactActivity" />
+        <activity
+            android:name=".AddEditContactActivity"
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- Compose & send screen -->
-        <activity android:name=".ComposeActivity" />
+        <activity
+            android:name=".ComposeActivity"
+            android:windowSoftInputMode="adjustResize" />
 
     </application>
 
