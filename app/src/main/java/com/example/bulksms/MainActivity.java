@@ -364,7 +364,14 @@ public class MainActivity extends AppCompatActivity {
         } else {
             btnCompose.setText(getString(R.string.compose_sms) + " (" + count + ")");
         }
-        emptyView.setVisibility(adapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
+        if (adapter.getItemCount() == 0) {
+            // Distinguish "no contacts at all" from "search returned nothing".
+            emptyView.setText(contacts.isEmpty()
+                    ? R.string.empty_contacts : R.string.empty_search);
+            emptyView.setVisibility(View.VISIBLE);
+        } else {
+            emptyView.setVisibility(View.GONE);
+        }
     }
 
     private void hideKeyboard() {

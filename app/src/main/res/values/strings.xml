@@ -6,4 +6,5 @@
     <string name="select_all">Select All</string>
     <string name="import_contacts">Import Contacts</string>
     <string name="empty_contacts">No contacts yet\nTap + to add one</string>
+    <string name="empty_search">No contacts match your search</string>
 </resources>
