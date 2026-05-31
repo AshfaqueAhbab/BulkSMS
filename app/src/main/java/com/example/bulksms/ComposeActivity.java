@@ -63,7 +63,10 @@ public class ComposeActivity extends AppCompatActivity {
         if (numbers == null) numbers = new String[0];
 
         TextView textRecipients = findViewById(R.id.textRecipients);
-        textRecipients.setText(TextUtils.join(", ", numbers));
+        textRecipients.setText(numbers.length + " recipient(s):\n" + TextUtils.join(", ", numbers));
+        // Cap the list height (set in XML) and let it scroll, so a large recipient
+        // list can't squeeze the message box down to nothing.
+        textRecipients.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
         editMessage = findViewById(R.id.editMessage);
 
