@@ -52,6 +52,10 @@ public class AddEditContactActivity extends AppCompatActivity {
             if (TextUtils.isEmpty(phone)) {
                 layoutPhone.setError("Phone is required");
                 valid = false;
+            } else if (phone.replaceAll("[^0-9]", "").length() < 3) {
+                // A real number needs digits — reject "abc" or stray symbols.
+                layoutPhone.setError("Enter a valid phone number");
+                valid = false;
             } else {
                 layoutPhone.setError(null);
             }

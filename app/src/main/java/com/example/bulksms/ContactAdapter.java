@@ -51,12 +51,16 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         holder.checkbox.setOnCheckedChangeListener(null);
         holder.checkbox.setChecked(selected.contains(c));
 
-        View.OnClickListener toggle = v -> toggleSelection(holder.getAdapterPosition());
+        View.OnClickListener toggle = v -> {
+            int pos = holder.getAdapterPosition();
+            if (pos != RecyclerView.NO_POSITION) toggleSelection(pos);
+        };
         holder.itemView.setOnClickListener(toggle);
         holder.checkbox.setOnClickListener(toggle);
 
         holder.itemView.setOnLongClickListener(v -> {
-            listener.onLongPress(holder.getAdapterPosition());
+            int pos = holder.getAdapterPosition();
+            if (pos != RecyclerView.NO_POSITION) listener.onLongPress(pos);
             return true;
         });
     }

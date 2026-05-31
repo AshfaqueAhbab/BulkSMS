@@ -25,6 +25,7 @@ public class ComposeActivity extends AppCompatActivity {
 
     private String[] numbers;
     private TextInputEditText editMessage;
+    private Button btnSend;
 
     private final ActivityResultLauncher<String> permissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -66,7 +67,7 @@ public class ComposeActivity extends AppCompatActivity {
 
         editMessage = findViewById(R.id.editMessage);
 
-        Button btnSend = findViewById(R.id.btnSend);
+        btnSend = findViewById(R.id.btnSend);
         btnSend.setOnClickListener(v -> {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS)
                     == PackageManager.PERMISSION_GRANTED) {
@@ -84,6 +85,10 @@ public class ComposeActivity extends AppCompatActivity {
             editMessage.setError("Message cannot be empty");
             return;
         }
+        if (numbers.length == 0) {
+            Toast.makeText(this, "No recipients", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         SmsManager smsManager;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -92,21 +97,45 @@ public class ComposeActivity extends AppCompatActivity {
         } else {
             smsManager = SmsManager.getDefault();
         }
+        final SmsManager sms = smsManager;
 
-        int sent = 0;
-        for (String number : numbers) {
-            try {
-                smsManager.sendTextMessage(number, null, message, null, null);
-                sent++;
-            } catch (Exception e) {
-                Toast.makeText(this, "Failed to send to " + number, Toast.LENGTH_SHORT).show();
+        // Disable the button so a second tap can't start a parallel send.
+        btnSend.setEnabled(false);
+        btnSend.setText("Sending…");
+
+        // Send off the main thread — a large recipient list would otherwise freeze the UI.
+        new Thread(() -> {
+            int sent = 0;
+            int failed = 0;
+            for (String number : numbers) {
+                try {
+                    // divideMessage splits messages longer than a single SMS (160 chars,
+                    // or 70 for unicode) into parts so nothing is silently truncated.
+                    java.util.ArrayList<String> parts = sms.divideMessage(message);
+                    if (parts.size() > 1) {
+                        sms.sendMultipartTextMessage(number, null, parts, null, null);
+                    } else {
+                        sms.sendTextMessage(number, null, message, null, null);
+                    }
+                    sent++;
+                } catch (Exception e) {
+                    failed++;
+                }
             }
-        }
-
-        if (sent > 0) {
-            Toast.makeText(this, "Sent to " + sent + " recipient(s)", Toast.LENGTH_SHORT).show();
-            finish();
-        }
+            final int sentCount = sent;
+            final int failedCount = failed;
+            runOnUiThread(() -> {
+                String msg = "Sent to " + sentCount + " recipient(s)";
+                if (failedCount > 0) msg += ", " + failedCount + " failed";
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                if (sentCount > 0) {
+                    finish();
+                } else {
+                    btnSend.setEnabled(true);
+                    btnSend.setText("Send SMS");
+                }
+            });
+        }).start();
     }
 
     @Override

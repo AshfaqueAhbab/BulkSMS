@@ -107,6 +107,10 @@ public class MainActivity extends AppCompatActivity {
         // menu system and wipes the items already loaded via app:menu in XML.
         // MainActivity needs no ActionBar APIs (no back button), so we drive the
         // toolbar directly.
+        toolbar.setTitle(R.string.app_name);
+        toolbar.setTitleTextColor(
+                com.google.android.material.color.MaterialColors.getColor(
+                        toolbar, com.google.android.material.R.attr.colorOnSurface));
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.action_import) {
                 handleImport();
@@ -230,10 +234,13 @@ public class MainActivity extends AppCompatActivity {
     private void showImportDialog(List<Contact> phoneContacts) {
         Set<String> existing = getExistingPhones();
 
-        // Filter out contacts whose numbers are already in the app
+        // Filter out contacts whose numbers are already in the app, and de-duplicate
+        // within the phone's own list (the address book often has the same number twice).
         List<Contact> importable = new ArrayList<>();
+        Set<String> seen = new HashSet<>(existing);
         for (Contact c : phoneContacts) {
-            if (!existing.contains(normalizePhone(c.getPhone()))) {
+            String norm = normalizePhone(c.getPhone());
+            if (!norm.isEmpty() && seen.add(norm)) {
                 importable.add(c);
             }
         }
@@ -301,6 +308,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int pos = viewHolder.getAdapterPosition();
+                if (pos == RecyclerView.NO_POSITION) return;
                 Contact c = adapter.getItem(pos);
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("Delete Contact")
