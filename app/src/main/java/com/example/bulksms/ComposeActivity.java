@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
@@ -106,39 +107,56 @@ public class ComposeActivity extends AppCompatActivity {
         btnSend.setEnabled(false);
         btnSend.setText("Sending…");
 
+        // divideMessage splits messages longer than a single SMS (160 chars, or 70 for
+        // unicode) into parts so nothing is silently truncated. Same message for everyone,
+        // so compute it once outside the loop.
+        java.util.ArrayList<String> parts = sms.divideMessage(message);
+        boolean multipart = parts.size() > 1;
+
         // Send off the main thread — a large recipient list would otherwise freeze the UI.
         new Thread(() -> {
             int sent = 0;
-            int failed = 0;
+            java.util.List<String> failed = new java.util.ArrayList<>();
             for (String number : numbers) {
                 try {
-                    // divideMessage splits messages longer than a single SMS (160 chars,
-                    // or 70 for unicode) into parts so nothing is silently truncated.
-                    java.util.ArrayList<String> parts = sms.divideMessage(message);
-                    if (parts.size() > 1) {
+                    if (multipart) {
                         sms.sendMultipartTextMessage(number, null, parts, null, null);
                     } else {
                         sms.sendTextMessage(number, null, message, null, null);
                     }
                     sent++;
                 } catch (Exception e) {
-                    failed++;
+                    failed.add(number);
                 }
             }
             final int sentCount = sent;
-            final int failedCount = failed;
-            runOnUiThread(() -> {
-                String msg = "Sent to " + sentCount + " recipient(s)";
-                if (failedCount > 0) msg += ", " + failedCount + " failed";
-                Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
-                if (sentCount > 0) {
-                    finish();
-                } else {
-                    btnSend.setEnabled(true);
-                    btnSend.setText("Send SMS");
-                }
-            });
+            final java.util.List<String> failedNumbers = failed;
+            runOnUiThread(() -> showSendResult(sentCount, failedNumbers));
         }).start();
+    }
+
+    private void showSendResult(int sentCount, java.util.List<String> failedNumbers) {
+        if (failedNumbers.isEmpty()) {
+            Toast.makeText(this, "Sent to " + sentCount + " recipient(s)",
+                    Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        // Some sends failed — list the numbers so the user knows exactly which to retry.
+        new AlertDialog.Builder(this)
+                .setTitle("Sent to " + sentCount + ", " + failedNumbers.size() + " failed")
+                .setMessage("These numbers failed:\n\n" + TextUtils.join("\n", failedNumbers))
+                .setPositiveButton("OK", (d, w) -> {
+                    if (sentCount > 0) {
+                        finish();
+                    } else {
+                        // Nothing sent — keep the screen so the message can be retried.
+                        btnSend.setEnabled(true);
+                        btnSend.setText("Send SMS");
+                    }
+                })
+                .setCancelable(false)
+                .show();
     }
 
     @Override

@@ -188,10 +188,18 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Select at least one contact", Toast.LENGTH_SHORT).show();
                 return;
             }
-            String[] numbers = new String[sel.size()];
-            for (int i = 0; i < sel.size(); i++) numbers[i] = sel.get(i).getPhone();
+            // De-duplicate by normalized number so a person saved under two formats
+            // (e.g. "+1-416-302-7137" and "+14163027137") only gets one message.
+            List<String> numbers = new ArrayList<>();
+            Set<String> seenNumbers = new HashSet<>();
+            for (Contact c : sel) {
+                String norm = normalizePhone(c.getPhone());
+                if (!norm.isEmpty() && seenNumbers.add(norm)) {
+                    numbers.add(c.getPhone());
+                }
+            }
             Intent intent = new Intent(this, ComposeActivity.class);
-            intent.putExtra("numbers", numbers);
+            intent.putExtra("numbers", numbers.toArray(new String[0]));
             startActivity(intent);
             adapter.clearSelection();
         });
