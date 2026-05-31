@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Contact> contacts;
     private ContactAdapter adapter;
     private Button btnCompose;
+    private Button btnSelectAll;
     private TextView emptyView;
 
     // ── Activity result launchers (must be registered before onCreate) ──────────
@@ -112,8 +113,15 @@ public class MainActivity extends AppCompatActivity {
                 com.google.android.material.color.MaterialColors.getColor(
                         toolbar, com.google.android.material.R.attr.colorOnSurface));
         toolbar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.action_import) {
+            int id = item.getItemId();
+            if (id == R.id.action_import) {
                 handleImport();
+                return true;
+            } else if (id == R.id.action_invert) {
+                adapter.invertFilteredSelection();
+                return true;
+            } else if (id == R.id.action_clear) {
+                adapter.clearSelection();
                 return true;
             }
             return false;
@@ -159,9 +167,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Select All (filters to currently visible contacts)
-        Button btnSelectAll = findViewById(R.id.btnSelectAll);
-        btnSelectAll.setOnClickListener(v -> adapter.selectAllFiltered());
+        // Select All toggles: select all visible, or deselect all visible if already all selected.
+        btnSelectAll = findViewById(R.id.btnSelectAll);
+        btnSelectAll.setOnClickListener(v -> {
+            if (adapter.areAllFilteredSelected()) {
+                adapter.deselectAllFiltered();
+            } else {
+                adapter.selectAllFiltered();
+            }
+        });
 
         FloatingActionButton fabAdd = findViewById(R.id.fabAdd);
         fabAdd.setOnClickListener(v ->
@@ -372,6 +386,9 @@ public class MainActivity extends AppCompatActivity {
         } else {
             emptyView.setVisibility(View.GONE);
         }
+        // Flip the button between Select All / Deselect All based on the visible set.
+        btnSelectAll.setText(adapter.areAllFilteredSelected()
+                ? R.string.deselect_all : R.string.select_all);
     }
 
     private void hideKeyboard() {

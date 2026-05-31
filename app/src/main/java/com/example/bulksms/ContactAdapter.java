@@ -110,6 +110,27 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
         listener.onSelectionChanged(selected.size());
     }
 
+    /** Deselect every contact currently visible (matching the active filter). */
+    public void deselectAllFiltered() {
+        selected.removeAll(filteredContacts);
+        notifyDataSetChanged();
+        listener.onSelectionChanged(selected.size());
+    }
+
+    /** True when every visible contact is already selected (and at least one is shown). */
+    public boolean areAllFilteredSelected() {
+        return !filteredContacts.isEmpty() && selected.containsAll(filteredContacts);
+    }
+
+    /** Flip the selection state of every visible contact: selected ↔ unselected. */
+    public void invertFilteredSelection() {
+        for (Contact c : filteredContacts) {
+            if (!selected.remove(c)) selected.add(c);
+        }
+        notifyDataSetChanged();
+        listener.onSelectionChanged(selected.size());
+    }
+
     public int getSelectedCount() { return selected.size(); }
 
     public List<Contact> getSelectedContacts() {
